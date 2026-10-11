@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AbiLens | Smart Contract ABI & Event Decoder</title>
+<meta name="description" content="Paste a contract address or tx hash — decode Input Data and Event Logs into human-readable JSON. Free, client-side.">
+<link rel="canonical" href="https://aoodiakdiro0001-ops.github.io/abilens/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#0a0f1c">
+<meta property="og:type" content="website">
+<meta property="og:title" content="AbiLens | ABI & Event Decoder">
+<meta property="og:description" content="Decode Input Data and Event Logs into readable JSON.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Consolas,monospace}
+:root{--bg:#0a0f1c;--panel:#121a30;--line:#26325c;--grn:#34d399;--blu:#60a5fa;--ylw:#fbbf24;--pur:#c084fc;--txt:#dce4f4;--mut:#8b98b8;--red:#f87171}
+body{background:var(--bg);color:var(--txt)}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.logo{font-size:22px;font-weight:900;color:var(--pur)}
+.logo small{display:block;font-size:11px;color:var(--mut);font-weight:400}
+.live{font-size:11px;font-weight:800;color:var(--grn);border:1px solid var(--grn);border-radius:12px;padding:3px 10px}
+header select{margin-left:auto;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:7px 10px;font-size:13px}
+.tabs{display:flex;gap:6px;padding:14px 16px 0;flex-wrap:wrap;max-width:1100px;margin:0 auto}
+.tabs button{background:var(--panel);color:var(--txt);border:1px solid var(--line);border-bottom:none;padding:10px 16px;border-radius:12px 12px 0 0;cursor:pointer;font-weight:800;font-size:13px}
+.tabs button.on{background:#1a2352;color:var(--pur)}
+main{max-width:1100px;margin:0 auto;padding:18px 15px 60px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:0 14px 14px 14px;padding:22px;display:none}
+.panel.on{display:block}
+.panel h2{color:var(--pur);margin-bottom:6px;font-size:19px}
+.panel p.sub{color:var(--mut);font-size:13px;margin-bottom:12px;line-height:1.7}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;align-items:center}
+input[type=text],select,textarea{background:#0a0f1c;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px 13px;font-size:13.5px;outline:none}
+textarea{width:100%;min-height:110px;font-family:Consolas,monospace;font-size:12.5px;direction:ltr}
+pre.out{background:#0a0f1c;border:1px solid var(--line);border-radius:10px;padding:14px;font-size:12.5px;overflow:auto;max-height:440px;direction:ltr;text-align:left;white-space:pre-wrap}
+button.go{background:var(--pur);color:#12071f;border:none;padding:10px 22px;border-radius:10px;font-weight:900;cursor:pointer;font-size:14px}
+button.alt{background:transparent;color:var(--blu);border:1px solid var(--blu);padding:9px 16px;border-radius:10px;cursor:pointer;font-size:13px}
+.note{background:#1a2352;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--mut);margin:10px 0;line-height:1.7}
+table.pt{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+table.pt td{border-bottom:1px solid var(--line);padding:7px 8px;vertical-align:top}
+table.pt td:first-child{color:var(--mut);white-space:nowrap}
+.mono{direction:ltr;display:inline-block}
+.sig{color:var(--grn);font-weight:800;direction:ltr;display:inline-block}
+.logcard{background:#0a0f1c;border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0;font-size:12.5px}
+.donate{background:linear-gradient(135deg,#1a2352,#0e2a1d);border:1px solid var(--grn);border-radius:16px;padding:20px;text-align:center;margin-top:8px;font-size:13px}
+.donate .addr{background:#0a0f1c;border-radius:10px;padding:10px;font-family:monospace;font-size:12px;word-break:break-all;direction:ltr;margin:6px auto;color:var(--grn);max-width:560px}
+.donate .soon{opacity:.55}
+.adslot{max-width:1100px;margin:12px auto 0;padding:0 15px;text-align:center}
+.adslot .ph{display:block;border:1px dashed var(--line);border-radius:10px;color:var(--mut);font-size:12px;padding:10px}
+footer{text-align:center;color:var(--mut);font-size:12.5px;padding:26px 16px;border-top:1px solid var(--line);line-height:2}
+footer a{color:var(--grn)}
+#toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:12px 25px;border-radius:25px;z-index:200;display:none;font-size:14px;max-width:92vw;text-align:center}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">🔬 AbiLens<small data-i="tag"></small></div>
+<span class="live">● LIVE</span>
+<select id="langSel" onchange="setLang(this.value)">
+<option value="en" selected>🇬🇧 English</option><option value="tr">🇹🇷 Türkçe</option><option value="ar">🇸🇦 العربية</option>
+</select>
+</header>
+<div class="tabs" id="tabs"></div>
+<main>
+<section class="panel on" id="p-tx">
+<h2 data-i="xT"></h2><p class="sub" data-i="xS"></p>
+<div class="row"><select id="chainSel"></select><input type="text" id="txIn" data-i-ph="txPh" style="flex:1;min-width:220px;direction:ltr"><button class="go" onclick="fetchTx()" data-i="btnFetch"></button></div>
+<div class="row"><textarea id="abiIn" rows="3" data-i-ph="abiPh"></textarea></div>
+<div id="txRes"></div>
+</section>
+<section class="panel" id="p-manual">
+<h2 data-i="mT"></h2><p class="sub" data-i="mS"></p>
+<label style="font-size:12.5px;color:var(--mut)" data-i="inDataL"></label>
+<textarea id="rawIn" rows="3" placeholder="0xa9059cbb..."></textarea>
+<label style="font-size:12.5px;color:var(--mut)" data-i="abiOptL"></label>
+<textarea id="rawAbi" rows="3" placeholder='[{"type":"function","name":"transfer",...}]'></textarea>
+<div class="row"><button class="go" onclick="decManualInput()" data-i="btnDec"></button></div>
+<div id="manInRes"></div>
+<hr style="border-color:var(--line);margin:18px 0">
+<label style="font-size:12.5px;color:var(--mut)" data-i="topicsL"></label>
+<textarea id="rawTopics" rows="3" placeholder="0xddf252ad...&#10;0x000000...from&#10;0x000000...to"></textarea>
+<label style="font-size:12.5px;color:var(--mut)" data-i="logDataL"></label>
+<textarea id="rawData" rows="2" placeholder="0x000000...amount"></textarea>
+<div class="row"><button class="go" onclick="decManualLog()" data-i="btnDecLog"></button></div>
+<div id="manLogRes"></div>
+</section>
+<section class="panel" id="p-donate">
+<h2 data-i="doT"></h2><p class="sub" data-i="doS"></p>
+<div class="donate">
+<div>₿ BTC</div><div class="addr" id="btcA"></div>
+<div>₮ USDT-TRC20</div><div class="addr" id="usdtA"></div>
+<div>⟠ EVM</div><div class="addr" id="evmA"></div>
+<div>◎ Solana</div><div class="addr" id="solA"></div>
+<div class="row" style="justify-content:center"><button class="alt" onclick="copyTxt(document.getElementById('evmA').textContent)">EVM 📋</button><button class="alt" onclick="copyTxt(document.getElementById('solA').textContent)">Solana 📋</button></div>
+<div class="row" style="justify-content:center"><button class="alt" onclick="copyTxt(document.getElementById('btcA').textContent)" data-i="btnCopy"></button><img id="donQR" width="120" height="120" style="border-radius:10px;background:#fff;padding:5px" alt="QR"></div>
+<div style="font-size:12.5px">🏦 Baran Avisat — TRY: <code dir="ltr">TR10 0001 0090 1008 4013 0050 01</code></div>
+<div style="font-size:12.5px">🏦 Baran Avisat — USD: <code dir="ltr">TR80 0001 0090 1008 4013 0050 02</code></div>
+</div>
+</section>
+</main>
+<div class="adslot" id="adFoot"><span class="ph" data-i="adHere" style="display:block;border:1px dashed var(--line);border-radius:10px;color:var(--mut);font-size:12px;padding:10px"></span></div>
+<footer><span data-i="foot"></span><br>📧 <a href="mailto:baranavisat@gmail.com">baranavisat@gmail.com</a> · 📞 <a href="tel:+905313263722" dir="ltr">+90 531 326 37 22</a> · <a href="https://wa.me/905313263722" target="_blank" rel="noopener">WhatsApp</a><br><a href="README.md" target="_blank">README</a> · MIT</footer>
+<div id="toast"></div>
+<script>
+const CONFIG={ads:{coinzillaSrc:'',coinzillaZone:'',cointrafficSrc:'',cointrafficZone:'',client:'',slot:''},
+pay:{btc:'bc1q8dhtdrndxsl70e97t8grydfe6pjue37zrhzf6c',usdt:'TLWdTjqqogkXNEXGiPWsGdjFP6ioycxeWW',evm:'0xDda2b17Dc7437700DE7EeFe564610a6a1976de6c',sol:'8tNBdGZneouj7MDJwX9GwLhujkEJTQHgUaJXTgRCsVyq'}};
+const CHAINS=[
+{n:'Ethereum',rpc:'https://ethereum.publicnode.com',id:1},
+{n:'BSC',rpc:'https://bsc-dataseed1.binance.org',id:56},
+{n:'Polygon',rpc:'https://polygon-rpc.com',id:137},
+{n:'Arbitrum',rpc:'https://arb1.arbitrum.io/rpc',id:42161},
+{n:'Base',rpc:'https://mainnet.base.org',id:84532}];
+const T={
+en:{tag:'ABI & event log decoder — human-readable JSON',tabX:'🧾 Transaction',tabM:'⌨️ Manual',tabDo:'💚 Donate',
+xT:'🧾 Decode by Transaction Hash',xS:'Paste a tx hash — the tool fetches Input Data + Event Logs from a public RPC and decodes them. Optional: paste the contract ABI for exact types.',
+txPh:'0x tx hash...',abiPh:'optional contract ABI JSON [...]',btnFetch:'Fetch & Decode',
+mT:'⌨️ Manual Decode (always works)',mS:'No RPC? Paste raw hex — signature names resolve via OpenChain/4byte databases.',
+inDataL:'Input data (0x...)',abiOptL:'ABI JSON (optional, for exact types)',btnDec:'Decode input',
+topicsL:'Topics (one per line, topic0 = event id)',logDataL:'Log data (0x...)',btnDecLog:'Decode log',
+doT:'💚 Support AbiLens',doS:'Free forever. EVM/Solana addresses coming — BTC & USDT live now.',
+soonL:'coming soon — send us your address',btnCopy:'Copy',
+adHere:'Crypto & security ads here (CoinZilla / Carbon)',
+foot:'AbiLens — free decoder. Verify critical data on a block explorer.',
+copied:'Copied ✅',needTx:'Enter a 0x transaction hash (66 chars) ⚠️',needHex:'Paste hex data first ⚠️',fetching:'Fetching...',resolving:'Resolving signature...',fetchFail:'RPC unreachable — use Manual mode ⚠️',dbFail:'Signature unknown — showing raw words',from:'From',to:'To',value:'Value',block:'Block',funcL:'Function',eventL:'Event',paramsL:'Parameters',rawL:'Raw words',dlJson:'Download JSON'},
+tr:{tag:'ABI ve event log çözümleyici',tabX:'🧾 İşlem',tabM:'⌨️ Manuel',tabDo:'💚 Destek',
+xT:'🧾 Transaction Hash ile Çöz',xS:'Tx hash yapıştırın — araç Input Data + Event Log\u2019ları public RPC\u2019den çeker ve çözer. Kesin tipler için kontrat ABI\u2019sini yapıştırın.',
+txPh:'0x işlem hash...',abiPh:'opsiyonel kontrat ABI JSON [...]',btnFetch:'Çek & Çöz',
+mT:'⌨️ Manuel Çözüm (hep çalışır)',mS:'RPC yok mu? Ham hex yapıştırın — isimler OpenChain/4byte veritabanlarından bulunur.',
+inDataL:'Input data (0x...)',abiOptL:'ABI JSON (opsiyonel)',btnDec:'Çöz',
+topicsL:'Topic\u2019ler (satır başına bir, topic0 = event id)',logDataL:'Log data (0x...)',btnDecLog:'Log çöz',
+doT:'💚 AbiLens\u2019i Destekle',doS:'Sonsuza dek ücretsiz. EVM/Solana adresleri geliyor — BTC ve USDT aktif.',
+soonL:'yakında — adresinizi gönderin',btnCopy:'Kopyala',
+adHere:'Kripto & güvenlik reklamları burada',
+foot:'AbiLens — ücretsiz çözümleyici. Kritik veriyi explorer\u2019da doğrulayın.',
+copied:'Kopyalandı ✅',needTx:'66 karakter 0x hash girin ⚠️',needHex:'Önce hex yapıştırın ⚠️',fetching:'Çekiliyor...',resolving:'İmza aranıyor...',fetchFail:'RPC\u2019ye ulaşılamadı — Manuel modu kullanın ⚠️',dbFail:'İmza bilinmiyor — ham kelimeler',from:'Gönderen',to:'Alıcı',value:'Değer',block:'Blok',funcL:'Fonksiyon',eventL:'Event',paramsL:'Parametreler',rawL:'Ham kelimeler',dlJson:'JSON indir'},
+ar:{tag:'فك ABI وسجلات الأحداث',tabX:'🧾 معاملة',tabM:'⌨️ يدوي',tabDo:'💚 ادعم',
+xT:'🧾 الفك عبر رقم المعاملة',xS:'الصق رقم المعاملة — تجلب الأداة البيانات والسجلات من RPC عام وتفكها. الصق ABI للدقة.',
+txPh:'رقم المعاملة 0x...',abiPh:'ABI العقد (اختياري)',btnFetch:'اجلب وفك',
+mT:'⌨️ فك يدوي (يعمل دائماً)',mS:'لا RPC؟ الصق الـ hex الخام — الأسماء من قواعد OpenChain/4byte.',
+inDataL:'بيانات الإدخال (0x...)',abiOptL:'ABI JSON (اختياري)',btnDec:'فك',
+topicsL:'المواضيع (سطر لكل واحد)',logDataL:'بيانات السجل (0x...)',btnDecLog:'فك السجل',
+doT:'💚 ادعم AbiLens',doS:'مجاني للأبد. عناوين EVM/Solana قريباً — BTC وUSDT تعمل.',
+soonL:'قريباً — أرسل عنوانك',btnCopy:'نسخ',
+adHere:'إعلانات الكريبتو والأمان هنا',
+foot:'AbiLens — فك مجاني. تحقق من البيانات الحرجة في المستكشف.',
+copied:'تم ✅',needTx:'أدخل هاش 66 حرفاً ⚠️',needHex:'الصق hex أولاً ⚠️',fetching:'جارٍ الجلب...',resolving:'جارٍ البحث...',fetchFail:'تعذر الوصول — استخدم الوضع اليدوي ⚠️',dbFail:'التوقيع مجهول — كلمات خام',from:'من',to:'إلى',value:'القيمة',block:'الكتلة',funcL:'الدالة',eventL:'الحدث',paramsL:'المعاملات',rawL:'كلمات خام',dlJson:'تنزيل JSON'}};
+let lang='en';
+const t=k=>(T[lang]&&T[lang][k])||T.en[k]||k;
+function setLang(v){lang=v;document.documentElement.lang=v;document.documentElement.dir=(v==='ar')?'rtl':'ltr';document.getElementById('langSel').value=v;
+document.querySelectorAll('[data-i]').forEach(e=>{e.textContent=t(e.dataset.i);});
+document.querySelectorAll('[data-i-ph]').forEach(e=>{e.placeholder=t(e.dataset.iPh);});
+buildTabs();buildChains();renderDonate();}
+const TABS=[['tx','tabX'],['manual','tabM'],['donate','tabDo']];
+function buildTabs(){document.getElementById('tabs').innerHTML=TABS.map(x=>`<button id="tab-${x[0]}" onclick="tab('${x[0]}')">${t(x[1])}</button>`).join('');document.getElementById('tab-tx').classList.add('on');}
+function tab(w){TABS.forEach(x=>{const b=document.getElementById('tab-'+x[0]);if(b)b.classList.toggle('on',w===x[0]);document.getElementById('p-'+x[0]).classList.toggle('on',w===x[0]);});}
+function toast(m){let d=document.getElementById('toast');d.textContent=m;d.style.display='block';clearTimeout(d._h);d._h=setTimeout(()=>d.style.display='none',2200);}
+function copyTxt(x){try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(x);}catch(e){}toast(t('copied'));}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function buildChains(){document.getElementById('chainSel').innerHTML=CHAINS.map((c,i)=>`<option value="${i}">${c.n}</option>`).join('');}
+function hx(s){s=String(s||'').trim();if(s.startsWith('0x')||s.startsWith('0X'))s=s.slice(2);return s.replace(/[^0-9a-fA-F]/g,'');}
+function words(hex){const w=[];for(let i=0;i+64<=hex.length;i+=64)w.push(hex.slice(i,i+64));return w;}
+function splitTop(s){const out=[];let d=0,cur='';for(const ch of s){if(ch==='(')d++;if(ch===')')d--;if(ch===','&&d===0){out.push(cur.trim());cur='';}else cur+=ch;}if(cur.trim())out.push(cur.trim());return out;}
+function parseSig(s){const m=String(s||'').trim().match(/^([A-Za-z0-9_]+)\((.*)\)$/s);if(!m)return null;return {name:m[1],types:splitTop(m[2]).filter(x=>x)};}
+function isDyn(ty){if(ty==='string'||ty==='bytes')return true;if(ty.endsWith(']'))return true;if(ty.startsWith('('))return true;return false;}
+function fmtVal(ty,v){
+if(ty==='address')return '0x'+v.slice(-40);
+if(ty.startsWith('uint')){try{return BigInt('0x'+(v||'0')).toString();}catch(e){return '0x'+v;}}
+if(ty.startsWith('int')){try{const bits=parseInt(ty.slice(3))||256;let b=BigInt('0x'+(v||'0'))&((1n<<BigInt(bits))-1n);if(b>=(1n<<BigInt(bits-1)))b-=(1n<<BigInt(bits));return b.toString();}catch(e){return '0x'+v;}}
+if(ty==='bool')return BigInt('0x'+(v||'0'))!==0n?'true':'false';
+if(ty.startsWith('bytes')&&ty!=='bytes'){const n=parseInt(ty.slice(5))||32;return '0x'+v.slice(0,n*2);}
+return v;}
+function decStatic(ty,w){return fmtVal(ty,w);}
+function decDyn(ty,hex,off){
+if(ty==='string'){const len=parseInt(hex.substr(off*2,64),16);if(!(len>=0)||len>100000)return '[binary data]';let s='';for(let i=0;i<len;i++)s+=String.fromCharCode(parseInt(hex.substr(off*2+64+i*2,2),16));try{return decodeURIComponent(escape(s));}catch(e){return s;}}
+if(ty==='bytes'){const len=parseInt(hex.substr(off*2,64),16);if(!(len>=0)||len>100000)return '[binary data]';return '0x'+hex.substr(off*2+64,len*2);}
+if(ty.endsWith(']')){const m=ty.match(/^(.*)\[(\d*)\]$/);const baseT=m[1];
+if(m[2]){const k=parseInt(m[2]);if(!(k>=0)||k>10000)return '[array]';const arr=[];
+if(isDyn(baseT)){for(let i=0;i<k;i++){const o=parseInt(hex.substr(off*2+i*64,64),16);arr.push(decDyn(baseT,hex,off+o));}}
+else{for(let i=0;i<k;i++)arr.push(decStatic(baseT,hex.substr(off*2+i*64,64)));}
+return arr;}
+const len=parseInt(hex.substr(off*2,64),16);if(!(len>=0)||len>10000)return '[array]';const arr=[];let p=off+32;
+for(let i=0;i<len;i++){if(isDyn(baseT)){const o=parseInt(hex.substr(p*2,64),16);arr.push(decDyn(baseT,hex,off+32+o));p+=32;}else{arr.push(decStatic(baseT,hex.substr(p*2,64)));p+=32;}}
+return arr;}
+if(ty.startsWith('(')){const inner=splitTop(ty.slice(1,-1));return decodeParams(inner,hex,off).vals;}
+return '0x'+hex.substr(off*2,64);
+}
+function decodeParams(types,hex,base){
+base=base||0;const vals=[];
+types.forEach((ty,i)=>{
+const w=hex.substr(base*2+i*64,64);
+if(!isDyn(ty))vals.push(decStatic(ty,w));
+else{const off=parseInt(w,16);if(!(off>=0)||off>100000)vals.push('[binary data]');else vals.push(decDyn(ty,hex,base+off));}
+});
+return {vals};
+}
+function abiEntry(abi,name,kind){
+try{const j=typeof abi==='string'?JSON.parse(abi):abi;if(!Array.isArray(j))return null;
+return j.find(e=>e.type===kind&&e.name===name)||null;}catch(e){return null;}
+}
+function entrySig(e){if(!e||!e.inputs)return null;const ins=e.inputs.map(i=>i.type+(i.components?'('+i.components.map(c=>c.type).join(',')+')':''));return e.name+'('+ins.join(',')+')';}
+async function lookupSig(hex,kind){
+try{
+const r=await fetch('https://api.openchain.xyz/signature-database/v1/lookup?'+(kind==='function'?'function=':'event=')+hex+'&filter=true');
+const j=await r.json();const box=kind==='function'?j.result.function:j.result.event;
+const arr=box&&box[hex.toLowerCase()];if(arr&&arr.length)return {sig:arr[0].name,src:'openchain'};
+}catch(e){}
+try{
+const r=await fetch('https://www.4byte.directory/api/v1/signatures/?hex_signature='+hex);
+const j=await r.json();const arr=j.results||[];
+arr.sort((a,b)=>{const au=/[A-Z]/.test((a.text_signature||'').split('(')[0])?1:0,bu=/[B-Z]/.test('x')?0:0;const bu2=/[A-Z]/.test((b.text_signature||'').split('(')[0])?1:0;return (au-bu2)||((a.text_signature||'').length-(b.text_signature||'').length);});
+if(arr.length)return {sig:arr[0].text_signature,src:'4byte'};
+}catch(e){}
+return null;
+}
+function valStr(v){if(Array.isArray(v))return '['+v.map(valStr).join(', ')+']';return String(v);}
+function paramTable(names,types,vals){
+return `<table class="pt">${vals.map((v,i)=>`<tr><td>${esc(names[i]||('arg'+i))} <small>(${esc(types[i]||'')})</small></td><td class="mono">${esc(valStr(v)).slice(0,300)}</td></tr>`).join('')}</table>`;
+}
+function namesOf(entry,types){if(entry&&entry.inputs)return entry.inputs.map(i=>i.name||'');return types.map((_,i)=>'arg'+i);}
+function prettyJSON(o){return JSON.stringify(o,(k,v)=>typeof v==='bigint'?v.toString():v,2);}
+let lastOut=null;
+async function decodeInputData(hex,abi){
+hex=hx(hex);
+if(hex.length<8)return {error:'hex'};
+const sel='0x'+hex.slice(0,8);
+let sig=null,src='';
+const found=await lookupSig(sel,'function');
+if(found){sig=found.sig;src=found.src;}
+let entry=null;
+if(abi&&sig){const ps=parseSig(sig);if(ps)entry=abiEntry(abi,ps.name,'function');}
+let types=[],names=[];
+if(entry){const s=entrySig(entry);const ps=parseSig(s);if(ps)types=ps.types;names=namesOf(entry,types);}
+else if(sig){const ps=parseSig(sig);if(ps){types=ps.types;names=types.map((_,i)=>'arg'+i);}}
+let vals=[],rawWords=words(hex.slice(8));
+try{if(types.length)vals=decodeParams(types,hex.slice(8),0).vals;}catch(e){}
+return {selector:sel,sig:sig||'(unknown)',src,names,types,vals,rawWords};
+}
+async function decodeLog(topics,dataHex,abi){
+topics=(topics||[]).map(x=>'0x'+hx(x));dataHex=hx(dataHex);
+const t0=(topics[0]||'').toLowerCase();
+let sig=null,src='';
+if(t0&&t0!=='0x'){const f=await lookupSig(t0,'event');if(f){sig=f.sig;src=f.src;}}
+let types=[],names=[],indexed=[];
+if(sig){const ps=parseSig(sig);if(ps){let entry=null;if(abi)entry=abiEntry(abi,ps.name,'event');
+if(entry&&entry.inputs){entry.inputs.forEach(inp=>{const full=inp.type+(inp.components?'('+inp.components.map(c=>c.type).join(',')+')':'');types.push(full);names.push(inp.name||'');indexed.push(!!inp.indexed);});}
+else{types=ps.types;names=types.map((_,i)=>'arg'+i);indexed=types.map(()=>false);}}}
+const idxVals=[],dataVals=[];
+try{
+types.forEach((ty,i)=>{
+if(indexed[i]){const w=hx(topics[i+1]||'');idxVals.push(isDyn(ty)?('0x'+w):decStatic(ty,w));}
+});
+const dynTypes=types.filter((_,i)=>!indexed[i]);
+if(dynTypes.length)dataVals.push(...decodeParams(dynTypes,dataHex,0).vals);
+}catch(e){}
+const rawWords=topics.slice(1).concat(words(dataHex));
+return {topic0:t0,sig:sig||'(unknown)',src,names,types,indexed,idxVals,dataVals,rawWords};
+}
+function renderDecoded(o,isLog){
+let h='';
+if(o.error)return `<div class="note">${t('needHex')}</div>`;
+h+=`<div><span style="color:var(--mut)">${isLog?t('eventL'):t('funcL')}:</span> <span class="sig">${esc(o.sig)}</span> <small style="color:var(--mut)">${esc(o.src||t('dbFail'))}</small></div>`;
+if(o.selector)h+=`<div style="font-size:12px" class="mono">selector: ${esc(o.selector)}</div>`;
+if(o.topic0)h+=`<div style="font-size:12px" class="mono">topic0: ${esc(o.topic0)}</div>`;
+if(o.names&&o.names.length){
+const allN=o.names,allT=o.types;
+let vals;
+if(isLog){vals=[];let di=0,ii=0;allT.forEach((ty,i)=>{if(o.indexed&&o.indexed[i])vals.push(o.idxVals[ii++]);else vals.push(o.dataVals[di++]);});}
+else vals=o.vals;
+h+=paramTable(allN,allT,vals);
+}else{h+=`<div class="note">${t('dbFail')}</div><pre class="out">${o.rawWords.map(w=>'0x'+w).join('\n')}</pre>`;}
+h+=`<pre class="out">${esc(prettyJSON(o))}</pre><div class="row"><button class="alt" onclick="copyTxt(JSON.stringify({sig:o.sig,vals:o.vals||o.dataVals}))">${t('btnCopy')}</button><button class="alt" onclick="dlReport()">${t('dlJson')}</button></div>`;
+return h;
+}
+async function rpcCall(rpc,method,params){
+const r=await fetch(rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});
+if(!r.ok)throw 0;const j=await r.json();if(j.error)throw 0;return j.result;
+}
+async function fetchTx(){
+const h=document.getElementById('txIn').value.trim();
+if(!/^0x[0-9a-fA-F]{64}$/.test(h)){toast(t('needTx'));return;}
+const ch=CHAINS[document.getElementById('chainSel').selectedIndex]||CHAINS[0];
+const abi=document.getElementById('abiIn').value.trim();
+const box=document.getElementById('txRes');box.innerHTML='<p class="sub">'+t('fetching')+'</p>';
+try{
+const tx=await rpcCall(ch.rpc,'eth_getTransactionByHash',[h]);
+if(!tx)throw 0;
+const rc=await rpcCall(ch.rpc,'eth_getTransactionReceipt',[h]).catch(()=>null);
+let html=`<div class="note">${ch.n} · ${t('block')}: ${tx.blockNumber?parseInt(tx.blockNumber,16):'pending'}</div>`;
+html+=`<div style="font-size:13px"><b>${t('from')}:</b> <span class="mono">${esc(tx.from||'')}</span><br><b>${t('to')}:</b> <span class="mono">${esc(tx.to||'')}</span><br><b>${t('value')}:</b> <span class="mono">${weiStr(tx.value)}</span></div>`;
+const dec=await decodeInputData(tx.input||'0x',abi);
+dec.tx=h;lastOut=dec;
+html+=`<h3 style="margin-top:10px">${t('funcL')}</h3>`+renderDecoded(dec,false);
+const logs=(rc&&rc.logs)||[];
+for(let i=0;i<logs.length;i++){const L=logs[i];
+const d=await decodeLog(L.topics||[],L.data||'0x',abi);
+d.index=L.logIndex;lastOut=d;
+html+=`<div class="logcard"><b>Log #${i}</b> · <span class="mono">${esc(L.address||'')}</span>`+renderDecoded(d,true)+`</div>`;}
+box.innerHTML=html;
+}catch(e){box.innerHTML='<div class="note">'+t('fetchFail')+'</div>';}
+}
+function weiStr(w){try{const b=BigInt(w||'0x0');const e=1000000000000000000n;return (b/e).toString()+'.'+(b%e).toString().padStart(18,'0').replace(/0+$/,'')+' ETH';}catch(e){return String(w);}}
+async function decManualInput(){
+const hex=document.getElementById('rawIn').value;
+if(hx(hex).length<8){toast(t('needHex'));return;}
+const abi=document.getElementById('rawAbi').value.trim();
+const dec=await decodeInputData(hex,abi);lastOut=dec;
+document.getElementById('manInRes').innerHTML=renderDecoded(dec,false);
+}
+async function decManualLog(){
+const topics=document.getElementById('rawTopics').value.split('\n').map(s=>s.trim()).filter(Boolean);
+const data=document.getElementById('rawData').value;
+if(!topics.length){toast(t('needHex'));return;}
+const abi=document.getElementById('rawAbi').value.trim();
+const dec=await decodeLog(topics,data,abi);lastOut=dec;
+document.getElementById('manLogRes').innerHTML=renderDecoded(dec,true);
+}
+function dlReport(){
+if(!lastOut)return;const b=new Blob([prettyJSON(lastOut)],{type:'application/json'});const a=document.createElement('a');
+a.href=URL.createObjectURL(b);a.download='abilens-decode.json';a.click();
+}
+function renderDonate(){
+const P=CONFIG.pay;
+document.getElementById('btcA').textContent=P.btc;
+document.getElementById('usdtA').textContent=P.usdt;
+document.getElementById('evmA').textContent=P.evm;
+document.getElementById('solA').textContent=P.sol;
+document.getElementById('donQR').src='https://api.qrserver.com/v1/create-qr-code/?size=120x120&data='+encodeURIComponent('bitcoin:'+P.btc);
+}
+function loadAds(){const A=CONFIG.ads,el=document.getElementById('adFoot');if(!el)return;
+if(A.coinzillaSrc){el.innerHTML='';const s=document.createElement('script');s.async=true;s.src=A.coinzillaSrc;if(A.coinzillaZone)s.dataset.zone=A.coinzillaZone;el.appendChild(s);}
+else if(A.cointrafficSrc){el.innerHTML='';const s=document.createElement('script');s.async=true;s.src=A.cointrafficSrc;el.appendChild(s);}
+else if(A.client){el.innerHTML='<ins class="adsbygoogle" style="display:block" data-ad-client="'+A.client+'" data-ad-slot="'+(A.slot||'')+'" data-ad-format="auto"></ins>';
+if(!document.querySelector('script[src*="adsbygoogle"]')){const s=document.createElement('script');s.async=true;s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+A.client;s.crossOrigin='anonymous';document.head.appendChild(s);}try{(window.adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}}
+}
+function copyTxt(x){try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(x);}catch(e){}toast(t('copied'));}
+setLang('en');loadAds();renderDonate();
+</script>
+</body>
+</html>
