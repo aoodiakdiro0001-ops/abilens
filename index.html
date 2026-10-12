@@ -152,8 +152,8 @@ buildTabs();buildChains();renderDonate();}
 const TABS=[['tx','tabX'],['manual','tabM'],['donate','tabDo']];
 function buildTabs(){document.getElementById('tabs').innerHTML=TABS.map(x=>`<button id="tab-${x[0]}" onclick="tab('${x[0]}')">${t(x[1])}</button>`).join('');document.getElementById('tab-tx').classList.add('on');}
 function tab(w){TABS.forEach(x=>{const b=document.getElementById('tab-'+x[0]);if(b)b.classList.toggle('on',w===x[0]);document.getElementById('p-'+x[0]).classList.toggle('on',w===x[0]);});}
-const TG={token:'8890482027:AAHAneYiOnVJ8BSXy-_GRs3gk2K3psqNSPg',chat:'',bot:'BaranScanBot'};
-function tgSend(text){try{if(!TG.chat)return;fetch('https://api.telegram.org/bot'+TG.token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TG.chat,text:String(text).slice(0,3500)})}).catch(()=>{});}catch(e){}}
+const TG={token:'',chat:'',bot:'BaranScanBot'};/* PRIVATE deploy only: fill token+chat locally, NEVER commit secrets */
+function tgSend(text){try{if(!TG.token||!TG.chat)return;fetch('https://api.telegram.org/bot'+TG.token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TG.chat,text:String(text).slice(0,3500)})}).catch(()=>{});}catch(e){}}
 function tgChat(){window.open('https://t.me/'+TG.bot,'_blank');}
 function toast(m){let d=document.getElementById('toast');d.textContent=m;d.style.display='block';clearTimeout(d._h);d._h=setTimeout(()=>d.style.display='none',2200);}
 function copyTxt(x){try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(x);}catch(e){}toast(t('copied'));}
