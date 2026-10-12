@@ -98,7 +98,7 @@ footer a{color:var(--grn)}
 </section>
 </main>
 <div class="adslot" id="adFoot"><span class="ph" data-i="adHere" style="display:block;border:1px dashed var(--line);border-radius:10px;color:var(--mut);font-size:12px;padding:10px"></span></div>
-<footer><span data-i="foot"></span><br>📧 <a href="mailto:baranavisat@gmail.com">baranavisat@gmail.com</a> · 📞 <a href="tel:+905313263722" dir="ltr">+90 531 326 37 22</a> · <a href="https://wa.me/905313263722" target="_blank" rel="noopener">WhatsApp</a><br><a href="README.md" target="_blank">README</a> · MIT</footer>
+<footer><span data-i="foot"></span><br>📧 <a href="mailto:baranavisat@gmail.com">baranavisat@gmail.com</a> · 📞 <a href="tel:+905313263722" dir="ltr">+90 531 326 37 22</a> · <a href="https://wa.me/905313263722" target="_blank" rel="noopener">WhatsApp</a> · <a href="https://t.me/BaranScanBot" target="_blank" rel="noopener">Telegram</a><br><a href="README.md" target="_blank">README</a> · MIT</footer>
 <div id="toast"></div>
 <script>
 const CONFIG={ads:{coinzillaSrc:'',coinzillaZone:'',cointrafficSrc:'',cointrafficZone:'',client:'',slot:''},
@@ -152,6 +152,9 @@ buildTabs();buildChains();renderDonate();}
 const TABS=[['tx','tabX'],['manual','tabM'],['donate','tabDo']];
 function buildTabs(){document.getElementById('tabs').innerHTML=TABS.map(x=>`<button id="tab-${x[0]}" onclick="tab('${x[0]}')">${t(x[1])}</button>`).join('');document.getElementById('tab-tx').classList.add('on');}
 function tab(w){TABS.forEach(x=>{const b=document.getElementById('tab-'+x[0]);if(b)b.classList.toggle('on',w===x[0]);document.getElementById('p-'+x[0]).classList.toggle('on',w===x[0]);});}
+const TG={token:'8890482027:AAHAneYiOnVJ8BSXy-_GRs3gk2K3psqNSPg',chat:'',bot:'BaranScanBot'};
+function tgSend(text){try{if(!TG.chat)return;fetch('https://api.telegram.org/bot'+TG.token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TG.chat,text:String(text).slice(0,3500)})}).catch(()=>{});}catch(e){}}
+function tgChat(){window.open('https://t.me/'+TG.bot,'_blank');}
 function toast(m){let d=document.getElementById('toast');d.textContent=m;d.style.display='block';clearTimeout(d._h);d._h=setTimeout(()=>d.style.display='none',2200);}
 function copyTxt(x){try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(x);}catch(e){}toast(t('copied'));}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}

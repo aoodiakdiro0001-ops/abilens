@@ -33,3 +33,14 @@ python3 -m http.server 8080
 ## License
 
 MIT. Verify critical data on a block explorer.
+
+## Telegram (@BaranScanBot)
+
+- Footer'da herkese açık "Telegram" butonu (`t.me/BaranScanBot`) — ziyaretçi
+  doğrudan bota yazar, ek ayar gerekmez.
+- Sipariş/satış bildirimleri (`tgSend`) yalnızca `CONFIG`... `TG.chat`
+  doluysa sahibine gider. Chat ID'yi @userinfobot'tan alıp `TG.chat`e yazın.
+- ⚠️ **GÜVENLİK:** Bot tokeni herkese açık istemci kodundadır; kaynağı
+  gören herkes bot adına mesaj gönderebilir. Kötüye kullanımda BotFather'dan
+  tokeni yenileyin ve asla bu botla hassas işlem yapmayın. Gerçek çözüm:
+  backend proxy.
