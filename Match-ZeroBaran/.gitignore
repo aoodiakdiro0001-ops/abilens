@@ -1,0 +1,21 @@
+# Byte-compiled / caches
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Local virtualenv / vendored wheels
+.venv/
+venv/
+.deps/
+
+# Generated store, caches and reports
+data/store/
+data/cache/
+cover/fonts/
+*.zip
+.DS_Store

@@ -1,0 +1,61 @@
+name: Refresh recommendation matrices
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"   # every 6 hours — free on public repos
+  workflow_dispatch:
+    inputs:
+      notify:
+        description: "Send the digest to Telegram"
+        type: boolean
+        default: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      MZB_LANG: ar
+      MZB_TOP_K: "3"
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install (free public packages only)
+        run: pip install -r requirements.txt
+
+      - name: Optional CSV overrides from secrets
+        run: |
+          if [ -n "${{ secrets.PRODUCTS_CSV }}" ]; then
+            printf '%s' "${{ secrets.PRODUCTS_CSV }}" > data/products.csv
+          fi
+          if [ -n "${{ secrets.ORDERS_CSV }}" ]; then
+            printf '%s' "${{ secrets.ORDERS_CSV }}" > data/orders.csv
+          fi
+
+      - name: Tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Rebuild recommendation matrix
+        run: python -m matchzerobaran refresh
+
+      - name: Merchant digest (optional)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.notify }}
+        run: python -m matchzerobaran refresh --notify
+
+      - name: Publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: recommendations
+          path: data/store/recommendations.json
+          retention-days: 14

@@ -1,0 +1,36 @@
+# © 2026 Baran Avisat — All rights reserved.
+
+**Match-ZeroBaran** © 2026 Baran Avisat <baranavisat@gmail.com> · WhatsApp 00905313263722
+
+## Licensing model (dual)
+
+* **The code** ships under the MIT License (see `LICENSE`) — you may use, modify
+  and redistribute it, commercially or privately, provided the copyright notice
+  above is retained in every copy and substantial portion.
+* **The brand assets** — the name *Match-ZeroBaran*, the cover artwork, the
+  logo and the marketing copy — are **not** MIT-licensed. They may be used to
+  promote genuine copies of this project, but may not be re-branded, resold as
+  a standalone product, or used to imply authorship.
+
+## Attribution (required)
+
+Any derivative, deployment or published fork must visibly retain:
+
+> © 2026 Baran Avisat · baranavisat@gmail.com · WhatsApp 00905313263722
+
+in its README, dashboard footer and generated reports.
+
+## Redistribution of data
+
+`data/*.csv` in this repository is **synthetic demo data**. Customer data you
+ingest is yours alone; it must never be committed to a public repository.
+`data/store/`, `data/cache/` and `.env` are therefore git-ignored by design.
+
+## No warranty
+
+This software is provided "as is", without warranty of any kind. The author is
+not liable for revenue loss, data loss or any other damages arising from its
+use. Test against a copy of your data before running it in production.
+
+---
+Baran Avisat — baranavisat@gmail.com — 00905313263722

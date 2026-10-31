@@ -1,0 +1,12 @@
+# Match-ZeroBaran — core (100% free tiers, no paid plan required)
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.3
+requests>=2.31
+
+# Optional — dashboard (free, local)
+# streamlit>=1.30
+
+# Optional — Supabase sync (free tier). The engine works fully offline
+# with the local JSON store, so this is only needed for cloud sync.
+# supabase>=2.4
